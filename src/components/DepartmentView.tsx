@@ -1,198 +1,214 @@
-import React from 'react';
-import { ArrowLeft, Monitor, Users, CheckCircle, ArrowRight, X } from 'lucide-react';
-import { Patient } from '../types';
+import React, { useState } from 'react';
+import { ArrowLeft, Monitor, CheckCircle, ArrowRight, X, CheckCircle2 } from 'lucide-react';
+import { Patient, Department } from '../types';
+import TransferPopup from './TransferPopup';
 
 interface DepartmentViewProps {
-  departmentId: string;
-  departmentName: string;
-  patients: Patient[];
-  onBack: () => void;
-  onUpdatePatient: (patientId: string, status: Patient['status']) => void;
-  onRemovePatient: (patientId: string) => void;
+	departmentId: string;
+	departmentName: string;
+	patients: Patient[];
+	departments: Department[];
+	onBack: () => void;
+	onUpdatePatient: (patientId: string, status: Patient['status']) => void;
+	onRemovePatient: (patientId: string) => void;
+	onCompleteAllPatients?: (patientIds: string[]) => void;
+	onTransferPatients?: (patientIds: string[], targetDepartment: string) => void;
 }
 
 const DepartmentView: React.FC<DepartmentViewProps> = ({ 
-  departmentId,
-  departmentName, 
-  patients, 
-  onBack,
-  onUpdatePatient,
-  onRemovePatient
+	departmentId,
+	departmentName, 
+	patients,
+	departments,
+	onBack,
+	onUpdatePatient,
+	onRemovePatient,
+	onCompleteAllPatients,
+	onTransferPatients
 }) => {
-  const getCurrentTime = () => {
-    return new Date().toLocaleString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true
-    });
-  };
+	const [showTransferPopup, setShowTransferPopup] = useState(false);
+	const getCurrentTime = () => {
+		return new Date().toLocaleString('en-US', {
+			hour: 'numeric',
+			minute: '2-digit',
+			hour12: true
+		});
+	};
 
-  const getDate = () => {
-    return new Date().toLocaleDateString('en-US', {
-      month: 'numeric',
-      day: 'numeric',
-      year: 'numeric'
-    });
-  };
+	const [currentTime, setCurrentTime] = React.useState(getCurrentTime());
 
-  const [currentTime, setCurrentTime] = React.useState(getCurrentTime());
+	React.useEffect(() => {
+		const timer = setInterval(() => {
+			setCurrentTime(getCurrentTime());
+		}, 1000);
+		return () => clearInterval(timer);
+	}, []);
 
-  React.useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(getCurrentTime());
-    }, 1000);
-    return () => clearInterval(timer);
-  }, []);
+	// Handle completing all patients in this department
+	const handleCompleteAll = () => {
+		if (patients.length === 0) return;
+		
+		const patientIds = patients.map(p => p.id);
+		if (onCompleteAllPatients) {
+			onCompleteAllPatients(patientIds);
+		} else {
+			// Fallback: complete each patient individually
+			patientIds.forEach(patientId => {
+				onUpdatePatient(patientId, 'completed');
+			});
+		}
+	};
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      {/* Header */}
-      <div className="bg-white shadow-sm">
-        <div className="max-w-full px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={onBack}
-                className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
-              >
-                <ArrowLeft className="w-5 h-5" />
-                <span>Back to Dashboard</span>
-              </button>
-              <div className="flex items-center space-x-3">
-                <Monitor className="w-6 h-6 text-blue-600" />
-                <h1 className="text-xl font-semibold text-gray-900">{departmentName} Display</h1>
-              </div>
-            </div>
-            <div className="flex items-center space-x-4">
-              <div className="text-right">
-                <div className="text-2xl font-bold text-gray-900">{currentTime}</div>
-                <div className="text-sm text-gray-600">{getDate()}</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+	// Handle transferring all patients to another department
+	const handleTransfer = () => {
+		if (patients.length === 0) return;
+		setShowTransferPopup(true);
+	};
 
-      {/* Branding */}
-      <div className="bg-white py-8">
-        <div className="max-w-6xl mx-auto px-6 text-center">
-          <div className="flex items-center justify-center space-x-8 mb-4">
-            {/* Northgate Open MRI Logo */}
-            <div className="flex items-center space-x-3">
-              <img 
-                src="/image1.png" 
-                alt="Northgate Open MRI" 
-                className="w-16 h-16 object-contain"
-              />
-              <div className="text-left">
-                <div className="text-lg font-bold text-gray-800">NORTHGATE</div>
-                <div className="text-sm text-gray-600">OPEN MRI</div>
-              </div>
-            </div>
-            
-            <div className="text-4xl text-gray-300">&</div>
-            
-            {/* McAllen Breast Imaging Logo */}
-            <div className="flex items-center space-x-3">
-              <img 
-                src="/image2.png" 
-                alt="McAllen Breast Imaging" 
-                className="w-16 h-16 object-contain"
-              />
-              <div className="text-left">
-                <div className="text-lg font-bold text-gray-800">McAllen</div>
-                <div className="text-sm text-gray-600">Breast Imaging</div>
-              </div>
-            </div>
-          </div>
-          <h2 className="text-2xl font-semibold text-gray-700">
-            {departmentName} Department
-          </h2>
-        </div>
-      </div>
+	const handleTransferConfirm = (targetDepartment: string) => {
+		if (onTransferPatients) {
+			const patientIds = patients.map(p => p.id);
+			onTransferPatients(patientIds, targetDepartment);
+		}
+	};
 
-      {/* Main Content */}
-      <div className="max-w-6xl mx-auto px-6 py-8">
-        <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-          {/* Department Header */}
-          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-8 text-center">
-            <h1 className="text-4xl font-bold mb-4">Current Patients</h1>
-            <div className="flex items-center justify-center space-x-6">
-              <span className="text-lg">{patients.length} patients • Live Updates</span>
-            </div>
-          </div>
+	// Handle removing all patients from this department
+	const handleRemoveAll = () => {
+		if (patients.length === 0) return;
+		
+		const confirmRemove = window.confirm(`Are you sure you want to remove all ${patients.length} patients from ${departmentName}? This action cannot be undone.`);
+		
+		if (confirmRemove) {
+			patients.forEach(patient => {
+				onRemovePatient(patient.id);
+			});
+		}
+	};
 
-          {/* Patient Display Area */}
-          <div className="p-12">
-            {patients.length === 0 ? (
-              <div className="text-center py-16">
-                <Monitor className="w-24 h-24 mx-auto mb-6 text-gray-300" />
-                <h3 className="text-2xl font-semibold text-gray-600 mb-4">
-                  No patients in {departmentName}
-                </h3>
-                <p className="text-gray-500 text-lg">
-                  Updates automatically in real-time
-                </p>
-              </div>
-            ) : (
-              <div className="grid gap-6">
-                {patients.map((patient) => (
-                  <div key={patient.id} className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="text-2xl font-bold text-gray-900">{patient.name}</h3>
-                        <p className="text-lg text-gray-600">{patient.department}</p>
-                        <p className="text-sm text-gray-500">
-                          Checked in at {new Date(patient.checkedInAt).toLocaleTimeString([], { 
-                            hour: '2-digit', 
-                            minute: '2-digit' 
-                          })}
-                        </p>
-                      </div>
-                      <div className="flex items-center space-x-3">
-                        <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                          patient.status === 'waiting' 
-                            ? 'bg-yellow-100 text-yellow-800' 
-                            : patient.status === 'in-progress'
-                            ? 'bg-blue-100 text-blue-800'
-                            : 'bg-green-100 text-green-800'
-                        }`}>
-                          {patient.status === 'waiting' ? 'Waiting' : 
-                           patient.status === 'in-progress' ? 'In Progress' : 'Completed'}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
+	return (
+		<div className="min-h-screen bg-gradient-to-br from-white to-brand-50">
+			{/* Toolbar */}
+			<div className="border-b border-gray-200 bg-white/90 backdrop-blur">
+				<div className="max-w-6xl mx-auto px-3 sm:px-4 md:px-6 py-3">
+					<div className="flex items-center justify-between">
+						<div className="flex items-center gap-2 sm:gap-3">
+							<button onClick={onBack} className="btn-secondary text-sm">
+								<ArrowLeft className="w-4 h-4" />
+								<span className="hidden xs:inline">Back</span>
+							</button>
+							<div className="flex items-center gap-2 text-gray-700">
+								<Monitor className="w-4 h-4 sm:w-5 sm:h-5 text-brand-500" />
+								<h1 className="font-semibold text-sm sm:text-base">{departmentName}</h1>
+							</div>
+						</div>
+						<div className="text-xs sm:text-sm text-gray-600 font-mono">{currentTime}</div>
+					</div>
+				</div>
+			</div>
 
-        {/* Department Actions */}
-        <div className="mt-8 bg-white rounded-lg shadow-lg p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Department Actions:</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <button className="flex items-center justify-center space-x-2 p-4 bg-green-100 text-green-800 rounded-lg hover:bg-green-200 transition-colors">
-              <CheckCircle className="w-5 h-5" />
-              <span>Complete {departmentName} - marks patient as finished in this department</span>
-            </button>
-            <button className="flex items-center justify-center space-x-2 p-4 bg-blue-100 text-blue-800 rounded-lg hover:bg-blue-200 transition-colors">
-              <ArrowRight className="w-5 h-5" />
-              <span>Transfer - moves patient to different department</span>
-            </button>
-            <button className="flex items-center justify-center space-x-2 p-4 bg-red-100 text-red-800 rounded-lg hover:bg-red-200 transition-colors">
-              <X className="w-5 h-5" />
-              <span>Done & Remove - completely removes patient from system</span>
-            </button>
-          </div>
-          <div className="mt-4 text-sm text-gray-600">
-            <strong>Live Updates:</strong> All changes appear instantly across all devices • Actions refresh data automatically
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+
+			{/* Hero */}
+			<div className="max-w-6xl mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-6">
+				<div className="card overflow-hidden text-center">
+					<div className="bg-gradient-to-r from-brand-500 to-brand-600 text-white p-4 sm:p-6 md:p-8">
+						<h2 className="text-xl sm:text-2xl md:text-3xl font-extrabold">Active Patients - {departmentName}</h2>
+						<p className="mt-2 text-xs sm:text-sm">{patients.length} currently being served • Live</p>
+					</div>
+
+					{/* Patient Display Area */}
+					<div className="p-4 sm:p-6 md:p-8 lg:p-12 text-left">
+						{patients.length === 0 ? (
+							<div className="text-center py-12 sm:py-16 text-gray-500">
+								<Monitor className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 mx-auto mb-4 sm:mb-6 opacity-30" />
+								<h3 className="text-lg sm:text-xl md:text-2xl font-semibold mb-2 sm:mb-4">No active patients in {departmentName}</h3>
+								<p className="text-sm sm:text-base">Patients will appear here when they are called or assigned to this department</p>
+							</div>
+						) : (
+							<div className="grid gap-3 sm:gap-4">
+								{patients.map((patient, index) => (
+									<div key={patient.id} className="card p-4 sm:p-6 animate-fade-in-up" style={{ animationDelay: `${index * 40}ms` }}>
+										<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+											<div className="flex-1">
+												<h3 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">{patient.name}</h3>
+												<p className="text-sm text-gray-600">{patient.department}</p>
+												<p className="text-xs text-gray-500">Checked in at {new Date(patient.checkedInAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+											</div>
+											<div className="flex flex-col sm:items-end gap-2 sm:gap-3">
+												<span className={`px-3 py-1 rounded-full text-xs font-medium ${
+													patient.status === 'waiting' 
+														? 'bg-yellow-100 text-yellow-800' 
+														: patient.status === 'in-progress' || patient.status === 'called'
+														? 'bg-brand-100 text-brand-800'
+														: 'bg-emerald-100 text-emerald-800'
+												}`}> 
+													{patient.status === 'waiting' ? 'Waiting' : 
+													patient.status === 'in-progress' || patient.status === 'called' ? 'In Progress' : 'Completed'}
+												</span>
+												{(patient.status === 'called' || patient.status === 'in-progress') && (
+													<button
+														onClick={() => onUpdatePatient(patient.id, 'completed')}
+														className="btn-primary text-xs sm:text-sm w-full sm:w-auto"
+													>
+														<CheckCircle2 className="w-3 h-3 sm:w-4 sm:h-4" />
+														<span>Mark as Completed</span>
+													</button>
+												)}
+											</div>
+										</div>
+									</div>
+								))}
+							</div>
+						)}
+					</div>
+				</div>
+
+				{/* Department Actions */}
+				<div className="mt-6 sm:mt-8 card">
+					<div className="p-4 sm:p-6">
+						<h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">Department Actions</h3>
+						<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
+							<button 
+								onClick={handleCompleteAll}
+								disabled={patients.length === 0}
+								className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+							>
+								<CheckCircle className="w-4 h-4" />
+								<span className="hidden xs:inline">Complete {departmentName}</span>
+								<span className="xs:hidden">Complete All</span>
+							</button>
+							<button 
+								onClick={handleTransfer}
+								disabled={patients.length === 0}
+								className="btn-secondary disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+							>
+								<ArrowRight className="w-4 h-4" />
+								<span>Transfer</span>
+							</button>
+							<button 
+								onClick={handleRemoveAll}
+								disabled={patients.length === 0}
+								className="btn-secondary disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:col-span-2 lg:col-span-1"
+							>
+								<X className="w-4 h-4" />
+								<span className="hidden xs:inline">Done & Remove</span>
+								<span className="xs:hidden">Remove All</span>
+							</button>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			{/* Transfer Popup */}
+			<TransferPopup
+				isOpen={showTransferPopup}
+				onClose={() => setShowTransferPopup(false)}
+				onTransfer={handleTransferConfirm}
+				departments={departments}
+				currentDepartment={departmentName}
+				patientCount={patients.length}
+			/>
+		</div>
+	);
 };
 
 export default DepartmentView;

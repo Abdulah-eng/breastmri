@@ -4,54 +4,48 @@ import Header from './components/Header';
 import MainDashboard from './components/MainDashboard';
 import LobbyDisplay from './components/LobbyDisplay';
 import DepartmentView from './components/DepartmentView';
-import { Patient, Department } from './types';
+import { Patient, Department, NewPatient } from './types';
+import { usePatients } from './hooks/usePatients';
+import { useRecentCalls } from './hooks/useRecentCalls';
 
 function App() {
   const [currentView, setCurrentView] = useState<'dashboard' | 'lobby' | 'department'>('dashboard');
   const [selectedDepartment, setSelectedDepartment] = useState<string>('');
   const [isOnline, setIsOnline] = useState(true);
-  const [patients, setPatients] = useState<Patient[]>([]);
-  const [recentCalls, setRecentCalls] = useState<Patient[]>([]);
   
-  const departments: Department[] = [
-    { id: 'velocity1', name: 'Velocity 1' },
-    { id: 'velocity2', name: 'Velocity 2' },
-    { id: 'tbi', name: 'TBI' },
-    { id: 'ct', name: 'CT' },
-    { id: 'ultrasound', name: 'Ultrasound' },
-    { id: 'xray', name: 'X-Ray' },
-    { id: 'mammo', name: 'Mammo' }
-  ];
+  // Use database hooks
+  const { 
+    patients, 
+    departments, 
+    loading: patientsLoading, 
+    error: patientsError,
+    addPatient,
+    updatePatientStatus,
+    removePatient,
+    assignPatientToStation,
+    completeAllPatients,
+    transferPatients
+  } = usePatients();
+  
+  const { 
+    recentCalls, 
+    loading: callsLoading, 
+    error: callsError,
+    addRecentCall
+  } = useRecentCalls();
 
-  const addPatient = (patientData: Omit<Patient, 'id' | 'checkedInAt' | 'status'>) => {
-    const newPatient: Patient = {
-      ...patientData,
-      id: Date.now().toString(),
-      checkedInAt: new Date().toISOString(),
-      status: 'waiting'
-    };
-    setPatients(prev => [...prev, newPatient]);
-  };
-
-  const updatePatientStatus = (patientId: string, status: Patient['status']) => {
-    setPatients(prev => 
-      prev.map(patient => 
-        patient.id === patientId 
-          ? { ...patient, status, completedAt: status === 'completed' ? new Date().toISOString() : undefined }
-          : patient
-      )
-    );
-
-    if (status === 'called') {
-      const calledPatient = patients.find(p => p.id === patientId);
-      if (calledPatient) {
-        setRecentCalls(prev => [{ ...calledPatient, status }, ...prev].slice(0, 10));
+  // Enhanced update patient status with recent calls tracking
+  const handleUpdatePatientStatus = async (patientId: string, status: Patient['status']) => {
+    try {
+      await updatePatientStatus(patientId, status);
+      
+      // Add to recent calls if patient is being called
+      if (status === 'called') {
+        await addRecentCall(patientId);
       }
+    } catch (error) {
+      console.error('Error updating patient status:', error);
     }
-  };
-
-  const removePatient = (patientId: string) => {
-    setPatients(prev => prev.filter(patient => patient.id !== patientId));
   };
 
   const renderCurrentView = () => {
@@ -61,6 +55,7 @@ function App() {
           <LobbyDisplay 
             patients={patients}
             onBack={() => setCurrentView('dashboard')}
+            onUpdatePatient={handleUpdatePatientStatus}
           />
         );
       case 'department':
@@ -68,10 +63,16 @@ function App() {
           <DepartmentView
             departmentId={selectedDepartment}
             departmentName={departments.find(d => d.id === selectedDepartment)?.name || ''}
-            patients={patients.filter(p => p.department === selectedDepartment)}
+            patients={patients.filter(p => {
+              const department = departments.find(d => d.id === selectedDepartment);
+              return department && p.department === department.name && (p.status === 'called' || p.status === 'in-progress');
+            })}
+            departments={departments}
             onBack={() => setCurrentView('dashboard')}
-            onUpdatePatient={updatePatientStatus}
+            onUpdatePatient={handleUpdatePatientStatus}
             onRemovePatient={removePatient}
+            onCompleteAllPatients={completeAllPatients}
+            onTransferPatients={transferPatients}
           />
         );
       default:
@@ -81,7 +82,7 @@ function App() {
             recentCalls={recentCalls}
             departments={departments}
             onAddPatient={addPatient}
-            onUpdatePatient={updatePatientStatus}
+            onUpdatePatient={handleUpdatePatientStatus}
             onViewDepartment={(deptId) => {
               setSelectedDepartment(deptId);
               setCurrentView('department');
@@ -91,8 +92,41 @@ function App() {
     }
   };
 
+  // Show loading state
+  if (patientsLoading || callsLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-white to-brand-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading patient data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (patientsError || callsError) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-white to-brand-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-red-500 text-6xl mb-4">⚠️</div>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Database Connection Error</h2>
+          <p className="text-gray-600 mb-4">
+            {patientsError || callsError}
+          </p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="btn-primary"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-white to-brand-50">
       <Header 
         currentView={currentView}
         onViewChange={setCurrentView}
