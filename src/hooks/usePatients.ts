@@ -43,9 +43,6 @@ export const usePatients = () => {
         id: patient.id,
         name: patient.name,
         department: patient.departments?.name || 'Unknown Department',
-        phone: patient.phone || undefined,
-        appointmentType: patient.appointment_type || undefined,
-        priority: patient.priority,
         notes: patient.notes || undefined,
         scanTime: patient.scan_time || undefined,
         checkedInAt: patient.checked_in_at,
@@ -80,10 +77,7 @@ export const usePatients = () => {
         .from('patients')
         .insert({
           name: patientData.name,
-          phone: patientData.phone || null,
           department_id: department.id,
-          appointment_type: patientData.appointmentType || null,
-          priority: patientData.priority || 'Regular',
           notes: patientData.notes || null,
           scan_time: patientData.scanTime || null,
           status: 'waiting',
@@ -115,6 +109,7 @@ export const usePatients = () => {
       
       if (status === 'completed') {
         updateData.completed_at = new Date().toISOString();
+        updateData.station_id = null; // free station upon completion
       }
 
       const { error } = await supabase
@@ -191,7 +186,8 @@ export const usePatients = () => {
         .from('patients')
         .update({ 
           status: 'completed',
-          completed_at: new Date().toISOString()
+          completed_at: new Date().toISOString(),
+          station_id: null // free stations in bulk
         })
         .in('id', patientIds);
 

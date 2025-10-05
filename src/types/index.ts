@@ -2,9 +2,7 @@ export interface Patient {
   id: string;
   name: string;
   department: string; // This will be the department name for display
-  phone?: string;
-  appointmentType?: string;
-  priority?: 'Regular' | 'Priority' | 'Emergency';
+  
   notes?: string;
   scanTime?: string;
   checkedInAt: string;
@@ -17,9 +15,6 @@ export interface Patient {
 export interface NewPatient {
   name: string;
   department: string; // This will be the department ID from the form
-  phone?: string;
-  appointmentType?: string;
-  priority?: 'Regular' | 'Priority' | 'Emergency';
   notes?: string;
   scanTime?: string;
 }

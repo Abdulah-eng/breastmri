@@ -58,24 +58,18 @@ const RecentCalls: React.FC<RecentCallsProps> = ({ recentCalls, allPatients, onU
 								.filter(call => showCompleted || call.status !== 'completed')
 								.slice(0, 5)
 								.map((call, index) => (
-									<div key={call.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-lg bg-white/70 border border-gray-200 animate-fade-in-up gap-2 sm:gap-3" style={{ animationDelay: `${index * 40}ms` }}>
-										<div className="flex-1">
-											<p className="font-medium text-sm sm:text-base">{call.name}</p>
-											<p className="text-xs sm:text-sm text-gray-600">{call.department}</p>
-											<p className="text-xs text-gray-500">
-												Called at {new Date(call.checkedInAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-											</p>
-										</div>
+                                    <div key={call.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-lg bg-white/70 border border-gray-200 animate-fade-in-up gap-2 sm:gap-3" style={{ animationDelay: `${index * 40}ms` }}>
+                                        <div className="flex-1">
+                                            <p className="font-medium text-sm sm:text-base">{call.name}</p>
+                                            <p className="text-xs sm:text-sm text-gray-600">Station {call.station || 'N/A'}</p>
+                                        </div>
 										<div className="flex items-center gap-2 sm:gap-3">
 											<span className={`px-2 py-1 rounded-full text-xs ${
 												call.status === 'completed' 
 													? 'bg-green-100 text-green-800' 
-													: call.status === 'called'
-													? 'bg-yellow-100 text-yellow-800'
-													: 'bg-brand-100 text-brand-800'
+                                                    : 'bg-brand-100 text-brand-800'
 											}` }>
-												{call.status === 'completed' ? 'Completed' : 
-												 call.status === 'called' ? 'Called' : 'In Progress'}
+                                                {call.status === 'completed' ? 'Completed' : 'In Progress'}
 											</span>
 										</div>
 									</div>

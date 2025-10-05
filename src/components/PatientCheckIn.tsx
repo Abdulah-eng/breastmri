@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { UserPlus, Clock } from 'lucide-react';
-import { Patient, Department, NewPatient } from '../types';
+import { Department, NewPatient } from '../types';
 
 interface PatientCheckInProps {
     departments: Department[];
@@ -12,29 +12,21 @@ const PatientCheckIn: React.FC<PatientCheckInProps> = ({ departments, onAddPatie
 	const [patientName, setPatientName] = useState('');
     const [selectedDepartment, setSelectedDepartment] = useState('');
     const [scanTime, setScanTime] = useState('');
-    const [phone, setPhone] = useState('');
-    const [appointmentType, setAppointmentType] = useState('');
-    const [priority, setPriority] = useState<'Regular' | 'Priority' | 'Emergency'>('Regular');
+    
     const [notes, setNotes] = useState('');
 
 	const handleSubmit = (e: React.FormEvent) => {
 		e.preventDefault();
         if (patientName.trim() && selectedDepartment) {
-			onAddPatient({
+            onAddPatient({
 				name: patientName.trim(),
 				department: selectedDepartment,
                 scanTime: scanTime || undefined,
-                phone: phone || undefined,
-                appointmentType: appointmentType || undefined,
-                priority,
                 notes: notes || undefined
 			});
 			setPatientName('');
 			setSelectedDepartment('');
 			setScanTime('');
-            setPhone('');
-            setAppointmentType('');
-            setPriority('Regular');
             setNotes('');
 		}
 	};
@@ -46,8 +38,8 @@ const PatientCheckIn: React.FC<PatientCheckInProps> = ({ departments, onAddPatie
 					<h2 className="text-base sm:text-lg font-semibold">Patient Check-In</h2>
 				</div>
 
-                <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                         <div>
                             <label htmlFor="patientName" className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                                 Patient Name
@@ -62,42 +54,9 @@ const PatientCheckIn: React.FC<PatientCheckInProps> = ({ departments, onAddPatie
                                 required
                             />
                         </div>
-                        <div>
-                            <label htmlFor="phone" className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
-                                Phone Number
-                            </label>
-                            <input
-                                type="tel"
-                                id="phone"
-                                value={phone}
-                                onChange={(e) => setPhone(e.target.value)}
-                                placeholder="Enter phone number"
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent bg-white/90 text-sm sm:text-base"
-                                required
-                            />
-                        </div>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                        <div>
-                            <label htmlFor="department" className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
-                                Appointment Type
-                            </label>
-                            <select
-                                id="appointmentType"
-                                value={appointmentType}
-                                onChange={(e) => setAppointmentType(e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent bg-white/90 text-sm sm:text-base"
-                                required
-                            >
-                                <option value="">Select appointment type</option>
-                                <option value="MRI Scan">MRI Scan</option>
-                                <option value="Mammography">Mammography</option>
-                                <option value="CT Scan">CT Scan</option>
-                                <option value="Ultrasound">Ultrasound</option>
-                                <option value="X-Ray">X-Ray</option>
-                            </select>
-                        </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                         <div>
                             <label htmlFor="department" className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                                 Department
@@ -119,22 +78,7 @@ const PatientCheckIn: React.FC<PatientCheckInProps> = ({ departments, onAddPatie
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                        <div>
-                            <label htmlFor="priority" className="block text-sm font-medium text-gray-700 mb-2">
-                                Priority Level
-                            </label>
-                            <select
-                                id="priority"
-                                value={priority}
-                                onChange={(e) => setPriority(e.target.value as any)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent bg-white/90 text-sm sm:text-base"
-                            >
-                                <option value="Regular">Regular</option>
-                                <option value="Priority">Priority</option>
-                                <option value="Emergency">Emergency</option>
-                            </select>
-                        </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                         <div>
                             <label htmlFor="scanTime" className="block text-sm font-medium text-gray-700 mb-2">
                                 Scan Time (Optional)
@@ -152,7 +96,7 @@ const PatientCheckIn: React.FC<PatientCheckInProps> = ({ departments, onAddPatie
                         </div>
                     </div>
 
-                    <div>
+                    <div className="md:col-span-2">
                         <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-2">
                             Notes (Optional)
                         </label>
@@ -179,9 +123,6 @@ const PatientCheckIn: React.FC<PatientCheckInProps> = ({ departments, onAddPatie
                                 setPatientName('');
                                 setSelectedDepartment('');
                                 setScanTime('');
-                                setPhone('');
-                                setAppointmentType('');
-                                setPriority('Regular');
                                 setNotes('');
                             }}
                             className="btn-secondary text-sm sm:text-base flex-1 sm:flex-none"

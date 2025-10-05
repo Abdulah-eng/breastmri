@@ -83,6 +83,7 @@ function App() {
             departments={departments}
             onAddPatient={addPatient}
             onUpdatePatient={handleUpdatePatientStatus}
+            onAssignPatientToStation={assignPatientToStation}
             onViewDepartment={(deptId) => {
               setSelectedDepartment(deptId);
               setCurrentView('department');

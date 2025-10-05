@@ -1,13 +1,14 @@
 import React from 'react';
-import { Users, RefreshCw, PhoneCall, Clock } from 'lucide-react';
+import { Users, RefreshCw, Clock, Monitor } from 'lucide-react';
 import { Patient } from '../types';
 
 interface WaitlistProps {
 	patients: Patient[];
 	onUpdatePatient?: (patientId: string, status: Patient['status']) => void;
+	onAssignStation?: (patientId: string) => void;
 }
 
-const Waitlist: React.FC<WaitlistProps> = ({ patients, onUpdatePatient }) => {
+const Waitlist: React.FC<WaitlistProps> = ({ patients, onUpdatePatient, onAssignStation }) => {
 	return (
 		<div className="card">
 			<div className="p-6">
@@ -50,11 +51,11 @@ const Waitlist: React.FC<WaitlistProps> = ({ patients, onUpdatePatient }) => {
 									</div>
 									<div className="mt-3">
 										<button
-											onClick={() => onUpdatePatient && onUpdatePatient(patient.id, 'called')}
-											className="w-full btn-primary"
+											onClick={() => onAssignStation && onAssignStation(patient.id)}
+											className="w-full btn-secondary"
 										>
-											<PhoneCall className="w-4 h-4" />
-											<span>Mark as Called</span>
+											<Monitor className="w-4 h-4" />
+											<span>Assign Station</span>
 										</button>
 									</div>
 								</div>
