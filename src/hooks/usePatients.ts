@@ -34,7 +34,7 @@ export const usePatients = () => {
           *,
           departments (name)
         `)
-        .order('checked_in_at', { ascending: true });
+        .order('checked_in_at', { ascending: false });
 
       if (error) throw error;
       
