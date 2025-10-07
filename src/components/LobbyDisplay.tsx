@@ -11,7 +11,32 @@ interface LobbyDisplayProps {
 
 const LobbyDisplay: React.FC<LobbyDisplayProps> = ({ patients, onBack, onUpdatePatient, onFreeStation }) => {
     const waitingPatients = patients.filter(p => p.status === 'waiting');
-    const activePatients = patients.filter(p => (p.status === 'in-progress' || p.status === 'called') && p.station != null);
+	const [firstSeenAt, setFirstSeenAt] = React.useState<Record<string, number>>({});
+	const nowMs = Date.now();
+
+	// Track when a patient first appears in the active list
+	React.useEffect(() => {
+		const next: Record<string, number> = { ...firstSeenAt };
+		for (const p of patients) {
+			if ((p.status === 'in-progress' || p.status === 'called') && p.station != null) {
+				if (!next[p.id]) next[p.id] = Date.now();
+			}
+		}
+		// Clean entries no longer active
+		for (const id of Object.keys(next)) {
+			const stillActive = patients.some(p => p.id === id && (p.status === 'in-progress' || p.status === 'called') && p.station != null);
+			if (!stillActive) delete next[id];
+		}
+		if (Object.keys(next).length !== Object.keys(firstSeenAt).length) setFirstSeenAt(next);
+	}, [patients]);
+
+	// Auto-hide after 3 minutes (180000 ms)
+	const activePatients = patients.filter(p => {
+		if (!((p.status === 'in-progress' || p.status === 'called') && p.station != null)) return false;
+		const seen = firstSeenAt[p.id];
+		if (!seen) return true;
+		return nowMs - seen < 180000; // keep for 3 minutes
+	});
 	const completedPatients = patients.filter(p => p.status === 'completed');
 
 	const getCurrentTime = () => {
@@ -103,7 +128,7 @@ const LobbyDisplay: React.FC<LobbyDisplayProps> = ({ patients, onBack, onUpdateP
                                                             onClick={() => onFreeStation(patient.id)}
 															className="btn-secondary text-xs sm:text-sm w-full sm:w-auto"
 														>
-															Free Station
+															Mark Completed
 														</button>
 													)}
 												</div>
