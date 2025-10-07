@@ -3,14 +3,15 @@ import { ArrowLeft, Monitor, RefreshCw, Wifi, PhoneCall } from 'lucide-react';
 import { Patient } from '../types';
 
 interface LobbyDisplayProps {
-	patients: Patient[];
-	onBack: () => void;
-	onUpdatePatient?: (patientId: string, status: Patient['status']) => void;
+    patients: Patient[];
+    onBack: () => void;
+    onUpdatePatient?: (patientId: string, status: Patient['status']) => void;
+    onFreeStation?: (patientId: string) => void;
 }
 
-const LobbyDisplay: React.FC<LobbyDisplayProps> = ({ patients, onBack, onUpdatePatient }) => {
-	const waitingPatients = patients.filter(p => p.status === 'waiting');
-	const activePatients = patients.filter(p => p.status === 'in-progress' || p.status === 'called');
+const LobbyDisplay: React.FC<LobbyDisplayProps> = ({ patients, onBack, onUpdatePatient, onFreeStation }) => {
+    const waitingPatients = patients.filter(p => p.status === 'waiting');
+    const activePatients = patients.filter(p => (p.status === 'in-progress' || p.status === 'called') && p.station != null);
 	const completedPatients = patients.filter(p => p.status === 'completed');
 
 	const getCurrentTime = () => {
@@ -82,7 +83,7 @@ const LobbyDisplay: React.FC<LobbyDisplayProps> = ({ patients, onBack, onUpdateP
 											<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
 												<div className="flex-1">
 													<h3 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">{patient.name}</h3>
-													<p className="text-sm text-gray-600">{patient.department}</p>
+												{/* Department intentionally hidden for privacy */}
 													<p className="text-xs text-gray-500">
 														Called at {new Date(patient.checkedInAt).toLocaleTimeString([], { 
 															hour: '2-digit', 
@@ -97,6 +98,14 @@ const LobbyDisplay: React.FC<LobbyDisplayProps> = ({ patients, onBack, onUpdateP
 													<div className="text-sm sm:text-base font-semibold text-brand-600">
 														Station {patient.station || 'N/A'}
 													</div>
+                                                    {onFreeStation && (
+														<button
+                                                            onClick={() => onFreeStation(patient.id)}
+															className="btn-secondary text-xs sm:text-sm w-full sm:w-auto"
+														>
+															Free Station
+														</button>
+													)}
 												</div>
 											</div>
 										</div>

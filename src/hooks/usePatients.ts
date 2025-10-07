@@ -187,6 +187,26 @@ export const usePatients = () => {
     }
   }, [fetchPatients]);
 
+  // Mark station complete (free station without changing patient status)
+  const markStationComplete = useCallback(async (patientId: string) => {
+    try {
+      const { error } = await supabase
+        .from('patients')
+        .update({ 
+          station_id: null
+        })
+        .eq('id', patientId);
+
+      if (error) throw error;
+
+      await fetchPatients();
+    } catch (err) {
+      console.error('Error freeing station for patient:', err);
+      setError('Failed to free station for patient');
+      throw err;
+    }
+  }, [fetchPatients]);
+
   // Complete multiple patients
   const completeAllPatients = useCallback(async (patientIds: string[]) => {
     try {
@@ -264,6 +284,7 @@ export const usePatients = () => {
     updatePatientStatus,
     removePatient,
     assignPatientToStation,
+    markStationComplete,
     completeAllPatients,
     transferPatients,
     refreshPatients: fetchPatients,

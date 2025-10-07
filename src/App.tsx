@@ -23,6 +23,7 @@ function App() {
     updatePatientStatus,
     removePatient,
     assignPatientToStation,
+    markStationComplete,
     completeAllPatients,
     transferPatients
   } = usePatients();
@@ -56,6 +57,13 @@ function App() {
             patients={patients}
             onBack={() => setCurrentView('dashboard')}
             onUpdatePatient={handleUpdatePatientStatus}
+            onFreeStation={async (patientId) => {
+              try {
+                await markStationComplete(patientId);
+              } catch (e) {
+                console.error(e);
+              }
+            }}
           />
         );
       case 'department':
