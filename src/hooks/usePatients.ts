@@ -164,11 +164,19 @@ export const usePatients = () => {
         .from('patients')
         .update({ 
           station_id: stationId,
-          status: 'in-progress'
+          status: 'called'  // Changed from 'in-progress' to 'called' so they appear in department view
         })
         .eq('id', patientId);
 
       if (error) throw error;
+
+      // Add to recent calls when assigned to station
+      await supabase
+        .from('recent_calls')
+        .insert({
+          patient_id: patientId,
+          called_by: 'System',
+        });
 
       // Refresh patients list
       await fetchPatients();

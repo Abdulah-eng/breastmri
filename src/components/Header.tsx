@@ -41,11 +41,10 @@ const Header: React.FC<HeaderProps> = ({
 			<div className="flex items-center justify-between py-3 sm:py-4 md:py-5">
 				{/* Left: Logos and Title */}
 				<div className="flex items-center gap-2 sm:gap-3 md:gap-5">
-					<img src="/image2.png" alt="McAllen Breast Imaging" className="h-8 sm:h-10 md:h-12 lg:h-14 xl:h-16 w-auto object-contain" />
 					<img src="/image1.png" alt="Northgate Open MRI" className="h-6 sm:h-8 md:h-10 lg:h-12 xl:h-14 w-auto object-contain" />
-					<div className="leading-tight hidden xs:block">
-						<div className="text-sm sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-extrabold tracking-tight text-gray-900">Patient Queue System</div>
-						<div className="text-xs sm:text-sm text-gray-600">Medical Imaging & Breast Health Services</div>
+					<div className="leading-tight">
+						<div className="text-sm sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-extrabold tracking-tight text-gray-900">Northgate Open MRI Intake</div>
+						<div className="text-xs sm:text-sm text-gray-600">Live queue management system • Updates automatically</div>
 					</div>
 				</div>
 

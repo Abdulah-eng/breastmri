@@ -65,46 +65,12 @@ const LobbyDisplay: React.FC<LobbyDisplayProps> = ({ patients, onBack, onUpdateP
 					<div className="bg-gradient-to-r from-brand-500 to-brand-600 text-white p-4 sm:p-6 md:p-8">
 						<h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold">Now Serving</h1>
 						<div className="mt-3 flex flex-wrap items-center justify-center gap-2 sm:gap-4 text-xs sm:text-sm">
-							<span className="px-2 sm:px-3 py-1 rounded-full bg-white/20">{waitingPatients.length} Waiting</span>
 							<span className="px-2 sm:px-3 py-1 rounded-full bg-white/20">{activePatients.length} Active</span>
 							<span className="px-2 sm:px-3 py-1 rounded-full bg-white/20">{completedPatients.length} Completed</span>
 						</div>
 					</div>
 
 					<div className="p-4 sm:p-6 md:p-8 lg:p-12">
-						{/* Waiting Patients Section */}
-						{waitingPatients.length > 0 && (
-							<div className="mb-6 sm:mb-8">
-								<h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-gray-800">Waiting Patients</h2>
-								<div className="grid gap-3 sm:gap-4 text-left">
-									{waitingPatients.map((patient, index) => (
-										<div key={patient.id} className="card p-4 sm:p-6 animate-fade-in-up" style={{ animationDelay: `${index * 40}ms` }}>
-											<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
-												<div className="flex-1">
-													<h3 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">{patient.name}</h3>
-													<p className="text-sm text-gray-600">{patient.department}</p>
-													<p className="text-xs text-gray-500">Checked in at {new Date(patient.checkedInAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
-												</div>
-												<div className="flex flex-col sm:items-end gap-2 sm:gap-3">
-													<div className="px-3 py-1 rounded-full bg-yellow-100 text-yellow-800 text-xs sm:text-sm font-medium">
-														Waiting
-													</div>
-													{onUpdatePatient && (
-														<button
-															onClick={() => onUpdatePatient(patient.id, 'called')}
-															className="btn-primary text-xs sm:text-sm w-full sm:w-auto"
-														>
-															<PhoneCall className="w-3 h-3 sm:w-4 sm:h-4" />
-															<span>Mark as Called</span>
-														</button>
-													)}
-												</div>
-											</div>
-										</div>
-									))}
-								</div>
-							</div>
-						)}
 
 						{/* Active Patients Section */}
 						{activePatients.length > 0 && (
@@ -140,11 +106,11 @@ const LobbyDisplay: React.FC<LobbyDisplayProps> = ({ patients, onBack, onUpdateP
 						)}
 
 						{/* No Patients Message */}
-						{waitingPatients.length === 0 && activePatients.length === 0 && (
+						{activePatients.length === 0 && (
 							<div className="text-center py-16 text-gray-500">
 								<Monitor className="w-24 h-24 mx-auto mb-6 opacity-30" />
-								<h3 className="text-2xl font-semibold mb-4">No patients in queue</h3>
-								<p>Patients will appear here when they check in</p>
+								<h3 className="text-2xl font-semibold mb-4">No patients being served</h3>
+								<p>Active patients will appear here when they are called</p>
 							</div>
 						)}
 					</div>
