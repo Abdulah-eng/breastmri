@@ -7,9 +7,10 @@ interface LobbyDisplayProps {
     onBack: () => void;
     onUpdatePatient?: (patientId: string, status: Patient['status']) => void;
     onFreeStation?: (patientId: string) => void;
+    onMarkCompleted?: (patientId: string) => void;
 }
 
-const LobbyDisplay: React.FC<LobbyDisplayProps> = ({ patients, onBack, onUpdatePatient, onFreeStation }) => {
+const LobbyDisplay: React.FC<LobbyDisplayProps> = ({ patients, onBack, onUpdatePatient, onFreeStation, onMarkCompleted }) => {
     const waitingPatients = patients.filter(p => p.status === 'waiting');
 	const [firstSeenAt, setFirstSeenAt] = React.useState<Record<string, number>>({});
 	const nowMs = Date.now();
@@ -123,14 +124,24 @@ const LobbyDisplay: React.FC<LobbyDisplayProps> = ({ patients, onBack, onUpdateP
 													<div className="text-sm sm:text-base font-semibold text-brand-600">
 														Station {patient.station || 'N/A'}
 													</div>
-                                                    {onFreeStation && (
-														<button
-                                                            onClick={() => onFreeStation(patient.id)}
-															className="btn-secondary text-xs sm:text-sm w-full sm:w-auto"
-														>
-															Mark Completed
-														</button>
-													)}
+                                                    <div className="flex gap-2">
+														{onFreeStation && (
+															<button
+																onClick={() => onFreeStation(patient.id)}
+																className="btn-secondary text-xs sm:text-sm"
+															>
+																Free Station
+															</button>
+														)}
+														{onMarkCompleted && (
+															<button
+																onClick={() => onMarkCompleted(patient.id)}
+																className="btn-primary text-xs sm:text-sm"
+															>
+																Mark Completed
+															</button>
+														)}
+													</div>
 												</div>
 											</div>
 										</div>

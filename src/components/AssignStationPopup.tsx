@@ -19,7 +19,16 @@ const AssignStationPopup: React.FC<AssignStationPopupProps> = ({
 }) => {
   const [selected, setSelected] = useState<number | null>(null);
 
-  const occupied = useMemo(() => new Set(patients.filter(p => p.station).map(p => Number(p.station))), [patients]);
+  // Show station occupancy count instead of blocking stations
+  const stationOccupancy = useMemo(() => {
+    const counts: Record<number, number> = {};
+    patients.filter(p => p.station).forEach(p => {
+      const stationId = Number(p.station);
+      counts[stationId] = (counts[stationId] || 0) + 1;
+    });
+    return counts;
+  }, [patients]);
+  
   const stations = useMemo(() => Array.from({ length: totalStations }, (_, i) => i + 1), [totalStations]);
 
   if (!isOpen) return null;
@@ -35,27 +44,29 @@ const AssignStationPopup: React.FC<AssignStationPopupProps> = ({
         </div>
 
         <div className="p-4 space-y-4">
-          <p className="text-sm text-gray-600">Select an available station below. Occupied stations are disabled.</p>
+          <p className="text-sm text-gray-600">Select a station below. Multiple patients can be assigned to the same station.</p>
 
           <div className="grid grid-cols-3 gap-3">
             {stations.map((id) => {
-              const isOccupied = occupied.has(id);
+              const occupancy = stationOccupancy[id] || 0;
               const isSelected = selected === id;
               return (
                 <button
                   key={id}
-                  disabled={isOccupied}
                   onClick={() => setSelected(id)}
                   className={`rounded-lg border p-4 flex flex-col items-center justify-center gap-2 transition-colors ${
-                    isOccupied
-                      ? 'bg-gray-50 border-gray-200 text-gray-400 cursor-not-allowed'
-                      : isSelected
+                    isSelected
                       ? 'bg-brand-50 border-brand-300 text-brand-700'
                       : 'bg-white border-gray-200 hover:bg-gray-50'
                   }`}
                 >
-                  <Monitor className={`w-6 h-6 ${isOccupied ? 'text-gray-300' : isSelected ? 'text-brand-600' : 'text-gray-400'}`} />
-                  <span className="text-sm font-medium">{id}</span>
+                  <Monitor className={`w-6 h-6 ${isSelected ? 'text-brand-600' : 'text-gray-400'}`} />
+                  <span className="text-sm font-medium">Station {id}</span>
+                  {occupancy > 0 && (
+                    <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                      {occupancy} patient{occupancy > 1 ? 's' : ''}
+                    </span>
+                  )}
                   {isSelected && <Check className="w-4 h-4 text-brand-600" />}
                 </button>
               );

@@ -207,6 +207,28 @@ export const usePatients = () => {
     }
   }, [fetchPatients]);
 
+  // Mark patient as completed (frees station and changes status to completed)
+  const markPatientCompleted = useCallback(async (patientId: string) => {
+    try {
+      const { error } = await supabase
+        .from('patients')
+        .update({ 
+          station_id: null,
+          status: 'completed',
+          completed_at: new Date().toISOString()
+        })
+        .eq('id', patientId);
+
+      if (error) throw error;
+
+      await fetchPatients();
+    } catch (err) {
+      console.error('Error marking patient as completed:', err);
+      setError('Failed to mark patient as completed');
+      throw err;
+    }
+  }, [fetchPatients]);
+
   // Complete multiple patients
   const completeAllPatients = useCallback(async (patientIds: string[]) => {
     try {
@@ -285,6 +307,7 @@ export const usePatients = () => {
     removePatient,
     assignPatientToStation,
     markStationComplete,
+    markPatientCompleted,
     completeAllPatients,
     transferPatients,
     refreshPatients: fetchPatients,

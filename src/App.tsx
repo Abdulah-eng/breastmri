@@ -24,6 +24,7 @@ function App() {
     removePatient,
     assignPatientToStation,
     markStationComplete,
+    markPatientCompleted,
     completeAllPatients,
     transferPatients
   } = usePatients();
@@ -60,6 +61,13 @@ function App() {
             onFreeStation={async (patientId) => {
               try {
                 await markStationComplete(patientId);
+              } catch (e) {
+                console.error(e);
+              }
+            }}
+            onMarkCompleted={async (patientId) => {
+              try {
+                await markPatientCompleted(patientId);
               } catch (e) {
                 console.error(e);
               }
