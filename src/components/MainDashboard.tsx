@@ -1,7 +1,6 @@
 import React, { useMemo, useRef, useState } from 'react';
 import { Patient, Department, NewPatient } from '../types';
 import Waitlist from './Waitlist';
-import StationAssignment from './StationAssignment';
 import AssignStationPopup from './AssignStationPopup';
 import PatientCheckIn from './PatientCheckIn';
 import RecentCalls from './RecentCalls';
@@ -14,6 +13,8 @@ interface MainDashboardProps {
 	onUpdatePatient: (patientId: string, status: Patient['status']) => void;
 	onViewDepartment: (departmentId: string) => void;
     onAssignPatientToStation?: (patientId: string, stationId: number) => void;
+	onFreeStation?: (patientId: string) => void;
+	onMarkCompleted?: (patientId: string) => void;
 }
 
 const MainDashboard: React.FC<MainDashboardProps> = ({
@@ -23,7 +24,9 @@ const MainDashboard: React.FC<MainDashboardProps> = ({
 	onAddPatient,
 	onUpdatePatient,
 	onViewDepartment,
-	onAssignPatientToStation
+	onAssignPatientToStation,
+	onFreeStation,
+	onMarkCompleted
 }) => {
 	const [assignPatientId, setAssignPatientId] = useState<string | null>(null);
 
@@ -49,18 +52,14 @@ const MainDashboard: React.FC<MainDashboardProps> = ({
 				/>
 			</div>
 
-			{/* Station Assignment - Full Width */}
-			<StationAssignment 
-				patients={patients} 
-				departments={departments} 
-				onViewDepartment={onViewDepartment} 
-			/>
 
 			{/* Recent Calls */}
 			<RecentCalls 
 				recentCalls={recentCalls} 
 				allPatients={patients}
 				onUpdatePatient={onUpdatePatient}
+				onFreeStation={onFreeStation}
+				onMarkCompleted={onMarkCompleted}
 			/>
 
 			{/* Assign Station Modal */}

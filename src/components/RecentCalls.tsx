@@ -6,9 +6,11 @@ interface RecentCallsProps {
 	recentCalls: Patient[];
 	allPatients: Patient[];
 	onUpdatePatient: (patientId: string, status: Patient['status']) => void;
+	onFreeStation?: (patientId: string) => void;
+	onMarkCompleted?: (patientId: string) => void;
 }
 
-const RecentCalls: React.FC<RecentCallsProps> = ({ recentCalls, allPatients, onUpdatePatient }) => {
+const RecentCalls: React.FC<RecentCallsProps> = ({ recentCalls, allPatients, onUpdatePatient, onFreeStation, onMarkCompleted }) => {
 	const [showCompleted, setShowCompleted] = useState(false);
 
 	// Remove duplicates and get unique patients from recent calls
@@ -71,6 +73,26 @@ const RecentCalls: React.FC<RecentCallsProps> = ({ recentCalls, allPatients, onU
 											}` }>
                                                 {call.status === 'completed' ? 'Completed' : 'In Progress'}
 											</span>
+											{call.status !== 'completed' && (
+												<div className="flex gap-1">
+													{onFreeStation && (
+														<button
+															onClick={() => onFreeStation(call.id)}
+															className="btn-secondary text-xs px-2 py-1"
+														>
+															Registered
+														</button>
+													)}
+													{onMarkCompleted && (
+														<button
+															onClick={() => onMarkCompleted(call.id)}
+															className="btn-primary text-xs px-2 py-1"
+														>
+															Mark Completed
+														</button>
+													)}
+												</div>
+											)}
 										</div>
 									</div>
 								))}

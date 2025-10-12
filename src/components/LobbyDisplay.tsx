@@ -103,49 +103,150 @@ const LobbyDisplay: React.FC<LobbyDisplayProps> = ({ patients, onBack, onUpdateP
 						{activePatients.length > 0 && (
 							<div className="mb-6 sm:mb-8">
 								<h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-gray-800">Currently Being Served</h2>
-								<div className="grid gap-3 sm:gap-4 text-left">
-									{activePatients.map((patient, index) => (
-										<div key={patient.id} className="card p-4 sm:p-6 animate-fade-in-up" style={{ animationDelay: `${index * 40}ms` }}>
-											<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
-												<div className="flex-1">
-													<h3 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">{patient.name}</h3>
-												{/* Department intentionally hidden for privacy */}
-													<p className="text-xs text-gray-500">
-														Called at {new Date(patient.checkedInAt).toLocaleTimeString([], { 
-															hour: '2-digit', 
-															minute: '2-digit' 
-														})}
-													</p>
-												</div>
-												<div className="flex flex-col sm:items-end gap-2 sm:gap-3">
-													<div className="px-3 py-1 rounded-full bg-brand-100 text-brand-800 text-xs sm:text-sm font-medium">
-														In Progress
+								<div className="space-y-3 sm:space-y-4">
+									{activePatients.length % 2 === 1 ? (
+										// Odd number: first patient full width, rest in pairs
+										<>
+											{/* First patient - full width */}
+											<div 
+												key={activePatients[0].id} 
+												className="card p-4 sm:p-6 animate-fade-in-up w-full"
+												style={{ animationDelay: '0ms' }}
+											>
+												<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+													<div className="flex-1 text-left pl-4">
+														<h3 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 text-left">{activePatients[0].name}</h3>
+														<p className="text-xs text-gray-500 text-left">
+															Called at {new Date(activePatients[0].checkedInAt).toLocaleTimeString([], { 
+																hour: '2-digit', 
+																minute: '2-digit' 
+															})}
+														</p>
 													</div>
-													<div className="text-sm sm:text-base font-semibold text-brand-600">
-														Station {patient.station || 'N/A'}
-													</div>
-                                                    <div className="flex gap-2">
-														{onFreeStation && (
-															<button
-																onClick={() => onFreeStation(patient.id)}
-																className="btn-secondary text-xs sm:text-sm"
-															>
-																Free Station
-															</button>
-														)}
-														{onMarkCompleted && (
-															<button
-																onClick={() => onMarkCompleted(patient.id)}
-																className="btn-primary text-xs sm:text-sm"
-															>
-																Mark Completed
-															</button>
-														)}
+													<div className="flex flex-col sm:items-end gap-2 sm:gap-3">
+														<div className="px-3 py-1 rounded-full bg-brand-100 text-brand-800 text-xs sm:text-sm font-medium">
+															In Progress
+														</div>
+														<div className="text-sm sm:text-base font-semibold text-brand-600">
+															Station {activePatients[0].station || 'N/A'}
+														</div>
+														<div className="flex gap-2">
+															{onFreeStation && (
+																<button
+																	onClick={() => onFreeStation(activePatients[0].id)}
+																	className="btn-secondary text-xs sm:text-sm"
+																>
+																	Registered
+																</button>
+															)}
+															{onMarkCompleted && (
+																<button
+																	onClick={() => onMarkCompleted(activePatients[0].id)}
+																	className="btn-primary text-xs sm:text-sm"
+																>
+																	Mark Completed
+																</button>
+															)}
+														</div>
 													</div>
 												</div>
 											</div>
-										</div>
-									))}
+											
+											{/* Remaining patients in pairs */}
+											{activePatients.slice(1).map((patient, index) => (
+												<div 
+													key={patient.id} 
+													className="card p-4 sm:p-6 animate-fade-in-up w-full sm:w-[calc(50%-0.375rem)] sm:inline-block"
+													style={{ animationDelay: `${(index + 1) * 40}ms` }}
+												>
+													<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+														<div className="flex-1">
+															<h3 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">{patient.name}</h3>
+															<p className="text-xs text-gray-500">
+																Called at {new Date(patient.checkedInAt).toLocaleTimeString([], { 
+																	hour: '2-digit', 
+																	minute: '2-digit' 
+																})}
+															</p>
+														</div>
+														<div className="flex flex-col sm:items-end gap-2 sm:gap-3">
+															<div className="px-3 py-1 rounded-full bg-brand-100 text-brand-800 text-xs sm:text-sm font-medium">
+																In Progress
+															</div>
+															<div className="text-sm sm:text-base font-semibold text-brand-600">
+																Station {patient.station || 'N/A'}
+															</div>
+															<div className="flex gap-2">
+																{onFreeStation && (
+																	<button
+																		onClick={() => onFreeStation(patient.id)}
+																		className="btn-secondary text-xs sm:text-sm"
+																	>
+																		Registered
+																	</button>
+																)}
+																{onMarkCompleted && (
+																	<button
+																		onClick={() => onMarkCompleted(patient.id)}
+																		className="btn-primary text-xs sm:text-sm"
+																	>
+																		Mark Completed
+																	</button>
+																)}
+															</div>
+														</div>
+													</div>
+												</div>
+											))}
+										</>
+									) : (
+										// Even number: all patients in pairs
+										activePatients.map((patient, index) => (
+											<div 
+												key={patient.id} 
+												className="card p-4 sm:p-6 animate-fade-in-up w-full sm:w-[calc(50%-0.375rem)] sm:inline-block"
+												style={{ animationDelay: `${index * 40}ms` }}
+											>
+												<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+													<div className="flex-1">
+														<h3 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">{patient.name}</h3>
+														<p className="text-xs text-gray-500">
+															Called at {new Date(patient.checkedInAt).toLocaleTimeString([], { 
+																hour: '2-digit', 
+																minute: '2-digit' 
+															})}
+														</p>
+													</div>
+													<div className="flex flex-col sm:items-end gap-2 sm:gap-3">
+														<div className="px-3 py-1 rounded-full bg-brand-100 text-brand-800 text-xs sm:text-sm font-medium">
+															In Progress
+														</div>
+														<div className="text-sm sm:text-base font-semibold text-brand-600">
+															Station {patient.station || 'N/A'}
+														</div>
+														<div className="flex gap-2">
+															{onFreeStation && (
+																<button
+																	onClick={() => onFreeStation(patient.id)}
+																	className="btn-secondary text-xs sm:text-sm"
+																>
+																	Registered
+																</button>
+															)}
+															{onMarkCompleted && (
+																<button
+																	onClick={() => onMarkCompleted(patient.id)}
+																	className="btn-primary text-xs sm:text-sm"
+																>
+																	Mark Completed
+																</button>
+															)}
+														</div>
+													</div>
+												</div>
+											</div>
+										))
+									)}
 								</div>
 							</div>
 						)}

@@ -100,6 +100,20 @@ function App() {
             onAddPatient={addPatient}
             onUpdatePatient={handleUpdatePatientStatus}
             onAssignPatientToStation={assignPatientToStation}
+            onFreeStation={async (patientId) => {
+              try {
+                await markStationComplete(patientId);
+              } catch (e) {
+                console.error(e);
+              }
+            }}
+            onMarkCompleted={async (patientId) => {
+              try {
+                await markPatientCompleted(patientId);
+              } catch (e) {
+                console.error(e);
+              }
+            }}
             onViewDepartment={(deptId) => {
               setSelectedDepartment(deptId);
               setCurrentView('department');
