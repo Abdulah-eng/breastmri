@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { PhoneCall, Eye, EyeOff } from 'lucide-react';
+import { PhoneCall, Eye, EyeOff, Edit2, Check, X } from 'lucide-react';
 import { Patient } from '../types';
 
 interface RecentCallsProps {
@@ -8,19 +8,38 @@ interface RecentCallsProps {
 	onUpdatePatient: (patientId: string, status: Patient['status']) => void;
 	onFreeStation?: (patientId: string) => void;
 	onMarkCompleted?: (patientId: string) => void;
+	onUpdatePatientName?: (patientId: string, newName: string) => void;
 }
 
-const RecentCalls: React.FC<RecentCallsProps> = ({ recentCalls, allPatients, onUpdatePatient, onFreeStation, onMarkCompleted }) => {
+const RecentCalls: React.FC<RecentCallsProps> = ({ recentCalls, allPatients, onUpdatePatient, onFreeStation, onMarkCompleted, onUpdatePatientName }) => {
 	const [showCompleted, setShowCompleted] = useState(false);
+	const [editingId, setEditingId] = useState<string | null>(null);
+	const [editName, setEditName] = useState('');
 
-	// Remove duplicates and get unique patients from recent calls
-	const uniqueCalls = recentCalls.reduce((acc, current) => {
+	// Get patients with stations (active patients)
+	const patientsWithStations = allPatients.filter(p => p.station != null && (p.status === 'called' || p.status === 'in-progress'));
+
+	// Combine recent calls and patients with stations, removing duplicates
+	const combinedCalls = [...recentCalls, ...patientsWithStations];
+	const uniqueCalls = combinedCalls.reduce((acc, current) => {
 		const existingIndex = acc.findIndex(item => item.id === current.id);
 		if (existingIndex === -1) {
 			acc.push(current);
+		} else {
+			// Keep the one with station if available
+			if (current.station != null) {
+				acc[existingIndex] = current;
+			}
 		}
 		return acc;
 	}, [] as Patient[]);
+
+	// Sort by most recent (patients with stations first, then by checked in time)
+	uniqueCalls.sort((a, b) => {
+		if (a.station != null && b.station == null) return -1;
+		if (a.station == null && b.station != null) return 1;
+		return new Date(b.checkedInAt).getTime() - new Date(a.checkedInAt).getTime();
+	});
 
 	// Calculate stats from all patients (more accurate)
 	const activeCalls = allPatients.filter(p => p.status === 'called' || p.status === 'in-progress').length;
@@ -58,44 +77,113 @@ const RecentCalls: React.FC<RecentCallsProps> = ({ recentCalls, allPatients, onU
 						<div className="w-full space-y-2">
 							{uniqueCalls
 								.filter(call => showCompleted || call.status !== 'completed')
-								.slice(0, 5)
-								.map((call, index) => (
-                                    <div key={call.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-lg bg-white/70 border border-gray-200 animate-fade-in-up gap-2 sm:gap-3" style={{ animationDelay: `${index * 40}ms` }}>
-                                        <div className="flex-1">
-                                            <p className="font-medium text-sm sm:text-base">{call.name}</p>
-                                            <p className="text-xs sm:text-sm text-gray-600">Station {call.station || 'N/A'}</p>
-                                        </div>
-										<div className="flex items-center gap-2 sm:gap-3">
-											<span className={`px-2 py-1 rounded-full text-xs ${
-												call.status === 'completed' 
-													? 'bg-green-100 text-green-800' 
-                                                    : 'bg-brand-100 text-brand-800'
-											}` }>
-                                                {call.status === 'completed' ? 'Completed' : 'In Progress'}
-											</span>
-											{call.status !== 'completed' && (
-												<div className="flex gap-1">
-													{onFreeStation && (
+								.slice(0, 10)
+								.map((call, index) => {
+									const isEditing = editingId === call.id;
+									
+									const handleEdit = () => {
+										setEditingId(call.id);
+										setEditName(call.name);
+									};
+
+									const handleSave = async () => {
+										if (onUpdatePatientName && editName.trim()) {
+											try {
+												await onUpdatePatientName(call.id, editName.trim());
+												setEditingId(null);
+												setEditName('');
+											} catch (error) {
+												console.error('Error updating patient name:', error);
+											}
+										}
+									};
+
+									const handleCancel = () => {
+										setEditingId(null);
+										setEditName('');
+									};
+
+									return (
+										<div key={call.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-lg bg-white/70 border border-gray-200 animate-fade-in-up gap-2 sm:gap-3" style={{ animationDelay: `${index * 40}ms` }}>
+											<div className="flex-1 flex items-center gap-2">
+												{isEditing ? (
+													<div className="flex-1 flex items-center gap-2">
+														<input
+															type="text"
+															value={editName}
+															onChange={(e) => setEditName(e.target.value)}
+															onKeyDown={(e) => {
+																if (e.key === 'Enter') handleSave();
+																if (e.key === 'Escape') handleCancel();
+															}}
+															className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-brand-500"
+															autoFocus
+														/>
 														<button
-															onClick={() => onFreeStation(call.id)}
-															className="btn-secondary text-xs px-2 py-1"
+															onClick={handleSave}
+															className="p-1 text-green-600 hover:bg-green-50 rounded"
+															title="Save"
 														>
-															Registered
+															<Check className="w-4 h-4" />
 														</button>
-													)}
-													{onMarkCompleted && (
 														<button
-															onClick={() => onMarkCompleted(call.id)}
-															className="btn-primary text-xs px-2 py-1"
+															onClick={handleCancel}
+															className="p-1 text-red-600 hover:bg-red-50 rounded"
+															title="Cancel"
 														>
-															Mark Completed
+															<X className="w-4 h-4" />
 														</button>
+													</div>
+												) : (
+													<>
+														<p className="font-medium text-sm sm:text-base">{call.name}</p>
+														{onUpdatePatientName && (
+															<button
+																onClick={handleEdit}
+																className="p-1 text-gray-400 hover:text-brand-600 hover:bg-gray-100 rounded"
+																title="Edit name"
+															>
+																<Edit2 className="w-3 h-3 sm:w-4 sm:h-4" />
+															</button>
+														)}
+													</>
+												)}
+											</div>
+											<div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+												<p className="text-xs sm:text-sm text-gray-600">Station {call.station || 'N/A'}</p>
+												<div className="flex items-center gap-2 sm:gap-3">
+													<span className={`px-2 py-1 rounded-full text-xs ${
+														call.status === 'completed' 
+															? 'bg-green-100 text-green-800' 
+															: 'bg-brand-100 text-brand-800'
+													}` }>
+														{call.status === 'completed' ? 'Completed' : 'In Progress'}
+													</span>
+													{call.status !== 'completed' && (
+														<div className="flex gap-1">
+															{onFreeStation && (
+																<button
+																	onClick={() => onFreeStation(call.id)}
+																	className="btn-secondary text-xs px-2 py-1"
+																>
+																	Registered
+																</button>
+															)}
+															{onMarkCompleted && (
+																<button
+																	onClick={() => onMarkCompleted(call.id)}
+																	className="btn-primary text-xs px-2 py-1"
+																>
+																	Mark Completed
+																</button>
+															)}
+														</div>
 													)}
 												</div>
-											)}
+											</div>
 										</div>
-									</div>
-								))}
+									);
+								})}
 						</div>
 					)}
 				</div>

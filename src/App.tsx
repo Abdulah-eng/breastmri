@@ -21,6 +21,7 @@ function App() {
     error: patientsError,
     addPatient,
     updatePatientStatus,
+    updatePatientName,
     removePatient,
     assignPatientToStation,
     markStationComplete,
@@ -72,6 +73,13 @@ function App() {
                 console.error(e);
               }
             }}
+            onUpdatePatientName={async (patientId, newName) => {
+              try {
+                await updatePatientName(patientId, newName);
+              } catch (e) {
+                console.error(e);
+              }
+            }}
           />
         );
       case 'department':
@@ -89,6 +97,13 @@ function App() {
             onRemovePatient={removePatient}
             onCompleteAllPatients={completeAllPatients}
             onTransferPatients={transferPatients}
+            onUpdatePatientName={async (patientId, newName) => {
+              try {
+                await updatePatientName(patientId, newName);
+              } catch (e) {
+                console.error(e);
+              }
+            }}
           />
         );
       default:
@@ -110,6 +125,13 @@ function App() {
             onMarkCompleted={async (patientId) => {
               try {
                 await markPatientCompleted(patientId);
+              } catch (e) {
+                console.error(e);
+              }
+            }}
+            onUpdatePatientName={async (patientId, newName) => {
+              try {
+                await updatePatientName(patientId, newName);
               } catch (e) {
                 console.error(e);
               }

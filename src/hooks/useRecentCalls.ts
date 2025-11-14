@@ -104,6 +104,30 @@ export const useRecentCalls = () => {
     loadData();
   }, [fetchRecentCalls]);
 
+  // Set up real-time subscription for recent calls
+  useEffect(() => {
+    const channel = supabase
+      .channel('recent-calls-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'recent_calls'
+        },
+        (payload) => {
+          console.log('Recent call change detected:', payload);
+          // Refresh recent calls when any change occurs
+          fetchRecentCalls();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [fetchRecentCalls]);
+
   return {
     recentCalls,
     loading,

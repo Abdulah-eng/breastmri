@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Monitor, CheckCircle, ArrowRight, X, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, Monitor, CheckCircle, ArrowRight, X, CheckCircle2, Edit2, Check } from 'lucide-react';
 import { Patient, Department } from '../types';
 import TransferPopup from './TransferPopup';
 
@@ -13,6 +13,7 @@ interface DepartmentViewProps {
 	onRemovePatient: (patientId: string) => void;
 	onCompleteAllPatients?: (patientIds: string[]) => void;
 	onTransferPatients?: (patientIds: string[], targetDepartment: string) => void;
+	onUpdatePatientName?: (patientId: string, newName: string) => void;
 }
 
 const DepartmentView: React.FC<DepartmentViewProps> = ({ 
@@ -24,9 +25,12 @@ const DepartmentView: React.FC<DepartmentViewProps> = ({
 	onUpdatePatient,
 	onRemovePatient,
 	onCompleteAllPatients,
-	onTransferPatients
+	onTransferPatients,
+	onUpdatePatientName
 }) => {
 	const [showTransferPopup, setShowTransferPopup] = useState(false);
+	const [editingId, setEditingId] = useState<string | null>(null);
+	const [editName, setEditName] = useState('');
 	const getCurrentTime = () => {
 		return new Date().toLocaleString('en-US', {
 			hour: 'numeric',
@@ -125,14 +129,80 @@ const DepartmentView: React.FC<DepartmentViewProps> = ({
 							</div>
 						) : (
 							<div className="grid gap-3 sm:gap-4">
-								{patients.map((patient, index) => (
-									<div key={patient.id} className="card p-4 sm:p-6 animate-fade-in-up" style={{ animationDelay: `${index * 40}ms` }}>
-										<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
-											<div className="flex-1">
-												<h3 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">{patient.name}</h3>
-												<p className="text-sm text-gray-600">{patient.department}</p>
-												<p className="text-xs text-gray-500">Checked in at {new Date(patient.checkedInAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
-											</div>
+								{patients.map((patient, index) => {
+									const isEditing = editingId === patient.id;
+									
+									const handleEdit = () => {
+										setEditingId(patient.id);
+										setEditName(patient.name);
+									};
+
+									const handleSave = async () => {
+										if (onUpdatePatientName && editName.trim()) {
+											try {
+												await onUpdatePatientName(patient.id, editName.trim());
+												setEditingId(null);
+												setEditName('');
+											} catch (error) {
+												console.error('Error updating patient name:', error);
+											}
+										}
+									};
+
+									const handleCancel = () => {
+										setEditingId(null);
+										setEditName('');
+									};
+
+									return (
+										<div key={patient.id} className="card p-4 sm:p-6 animate-fade-in-up" style={{ animationDelay: `${index * 40}ms` }}>
+											<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+												<div className="flex-1">
+													{isEditing ? (
+														<div className="flex items-center gap-2 mb-2">
+															<input
+																type="text"
+																value={editName}
+																onChange={(e) => setEditName(e.target.value)}
+																onKeyDown={(e) => {
+																	if (e.key === 'Enter') handleSave();
+																	if (e.key === 'Escape') handleCancel();
+																}}
+																className="flex-1 px-2 py-1 text-base sm:text-lg md:text-xl border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-brand-500"
+																autoFocus
+															/>
+															<button
+																onClick={handleSave}
+																className="p-1 text-green-600 hover:bg-green-50 rounded"
+																title="Save"
+															>
+																<Check className="w-4 h-4" />
+															</button>
+															<button
+																onClick={handleCancel}
+																className="p-1 text-red-600 hover:bg-red-50 rounded"
+																title="Cancel"
+															>
+																<X className="w-4 h-4" />
+															</button>
+														</div>
+													) : (
+														<div className="flex items-center gap-2 mb-2">
+															<h3 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">{patient.name}</h3>
+															{onUpdatePatientName && (
+																<button
+																	onClick={handleEdit}
+																	className="p-1 text-gray-400 hover:text-brand-600 hover:bg-gray-100 rounded"
+																	title="Edit name"
+																>
+																	<Edit2 className="w-3 h-3 sm:w-4 sm:h-4" />
+																</button>
+															)}
+														</div>
+													)}
+													<p className="text-sm text-gray-600">{patient.department}</p>
+													<p className="text-xs text-gray-500">Checked in at {new Date(patient.checkedInAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+												</div>
 											<div className="flex flex-col sm:items-end gap-2 sm:gap-3">
 												<span className={`px-3 py-1 rounded-full text-xs font-medium ${
 													patient.status === 'waiting' 
@@ -154,9 +224,10 @@ const DepartmentView: React.FC<DepartmentViewProps> = ({
 													</button>
 												)}
 											</div>
+											</div>
 										</div>
-									</div>
-								))}
+									);
+								})}
 							</div>
 						)}
 					</div>

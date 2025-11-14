@@ -280,6 +280,25 @@ export const usePatients = () => {
     }
   }, [departments, fetchPatients]);
 
+  // Update patient name
+  const updatePatientName = useCallback(async (patientId: string, newName: string) => {
+    try {
+      const { error } = await supabase
+        .from('patients')
+        .update({ name: newName })
+        .eq('id', patientId);
+
+      if (error) throw error;
+
+      // Refresh patients list
+      await fetchPatients();
+    } catch (err) {
+      console.error('Error updating patient name:', err);
+      setError('Failed to update patient name');
+      throw err;
+    }
+  }, [fetchPatients]);
+
   // Initial load
   useEffect(() => {
     const loadData = async () => {
@@ -297,6 +316,30 @@ export const usePatients = () => {
     loadData();
   }, [fetchDepartments, fetchPatients]);
 
+  // Set up real-time subscription for patients
+  useEffect(() => {
+    const channel = supabase
+      .channel('patients-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'patients'
+        },
+        (payload) => {
+          console.log('Patient change detected:', payload);
+          // Refresh patients when any change occurs
+          fetchPatients();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [fetchPatients]);
+
   return {
     patients,
     departments,
@@ -304,6 +347,7 @@ export const usePatients = () => {
     error,
     addPatient,
     updatePatientStatus,
+    updatePatientName,
     removePatient,
     assignPatientToStation,
     markStationComplete,

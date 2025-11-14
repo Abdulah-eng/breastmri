@@ -1,5 +1,5 @@
-import React from 'react';
-import { ArrowLeft, Monitor, RefreshCw, Wifi, PhoneCall } from 'lucide-react';
+import React, { useState } from 'react';
+import { ArrowLeft, Monitor, RefreshCw, Wifi, PhoneCall, Edit2, Check, X } from 'lucide-react';
 import { Patient } from '../types';
 
 interface LobbyDisplayProps {
@@ -8,9 +8,85 @@ interface LobbyDisplayProps {
     onUpdatePatient?: (patientId: string, status: Patient['status']) => void;
     onFreeStation?: (patientId: string) => void;
     onMarkCompleted?: (patientId: string) => void;
+    onUpdatePatientName?: (patientId: string, newName: string) => void;
 }
 
-const LobbyDisplay: React.FC<LobbyDisplayProps> = ({ patients, onBack, onUpdatePatient, onFreeStation, onMarkCompleted }) => {
+const LobbyDisplay: React.FC<LobbyDisplayProps> = ({ patients, onBack, onUpdatePatient, onFreeStation, onMarkCompleted, onUpdatePatientName }) => {
+	const [editingId, setEditingId] = useState<string | null>(null);
+	const [editName, setEditName] = useState('');
+
+	const handleEdit = (patientId: string, currentName: string) => {
+		setEditingId(patientId);
+		setEditName(currentName);
+	};
+
+	const handleSave = async (patientId: string) => {
+		if (onUpdatePatientName && editName.trim()) {
+			try {
+				await onUpdatePatientName(patientId, editName.trim());
+				setEditingId(null);
+				setEditName('');
+			} catch (error) {
+				console.error('Error updating patient name:', error);
+			}
+		}
+	};
+
+	const handleCancel = () => {
+		setEditingId(null);
+		setEditName('');
+	};
+
+	const renderPatientName = (patient: Patient) => {
+		const isEditing = editingId === patient.id;
+		
+		if (isEditing) {
+			return (
+				<div className="flex items-center gap-2">
+					<input
+						type="text"
+						value={editName}
+						onChange={(e) => setEditName(e.target.value)}
+						onKeyDown={(e) => {
+							if (e.key === 'Enter') handleSave(patient.id);
+							if (e.key === 'Escape') handleCancel();
+						}}
+						className="flex-1 px-2 py-1 text-sm sm:text-base md:text-lg border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-brand-500"
+						autoFocus
+					/>
+					<button
+						onClick={() => handleSave(patient.id)}
+						className="p-1 text-green-600 hover:bg-green-50 rounded"
+						title="Save"
+					>
+						<Check className="w-4 h-4" />
+					</button>
+					<button
+						onClick={handleCancel}
+						className="p-1 text-red-600 hover:bg-red-50 rounded"
+						title="Cancel"
+					>
+						<X className="w-4 h-4" />
+					</button>
+				</div>
+			);
+		}
+		
+		return (
+			<div className="flex items-center gap-2">
+				<h3 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">{patient.name}</h3>
+				{onUpdatePatientName && (
+					<button
+						onClick={() => handleEdit(patient.id, patient.name)}
+						className="p-1 text-gray-400 hover:text-brand-600 hover:bg-gray-100 rounded"
+						title="Edit name"
+					>
+						<Edit2 className="w-3 h-3 sm:w-4 sm:h-4" />
+					</button>
+				)}
+			</div>
+		);
+	};
     const waitingPatients = patients.filter(p => p.status === 'waiting');
 	const [firstSeenAt, setFirstSeenAt] = React.useState<Record<string, number>>({});
 	const nowMs = Date.now();
@@ -115,8 +191,8 @@ const LobbyDisplay: React.FC<LobbyDisplayProps> = ({ patients, onBack, onUpdateP
 											>
 												<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
 													<div className="flex-1 text-left pl-4">
-														<h3 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 text-left">{activePatients[0].name}</h3>
-														<p className="text-xs text-gray-500 text-left">
+														{renderPatientName(activePatients[0])}
+														<p className="text-xs text-gray-500 text-left mt-1">
 															Called at {new Date(activePatients[0].checkedInAt).toLocaleTimeString([], { 
 																hour: '2-digit', 
 																minute: '2-digit' 
@@ -161,8 +237,8 @@ const LobbyDisplay: React.FC<LobbyDisplayProps> = ({ patients, onBack, onUpdateP
 												>
 													<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
 														<div className="flex-1">
-															<h3 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">{patient.name}</h3>
-															<p className="text-xs text-gray-500">
+															{renderPatientName(patient)}
+															<p className="text-xs text-gray-500 mt-1">
 																Called at {new Date(patient.checkedInAt).toLocaleTimeString([], { 
 																	hour: '2-digit', 
 																	minute: '2-digit' 
@@ -209,8 +285,8 @@ const LobbyDisplay: React.FC<LobbyDisplayProps> = ({ patients, onBack, onUpdateP
 											>
 												<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
 													<div className="flex-1">
-														<h3 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">{patient.name}</h3>
-														<p className="text-xs text-gray-500">
+														{renderPatientName(patient)}
+														<p className="text-xs text-gray-500 mt-1">
 															Called at {new Date(patient.checkedInAt).toLocaleTimeString([], { 
 																hour: '2-digit', 
 																minute: '2-digit' 

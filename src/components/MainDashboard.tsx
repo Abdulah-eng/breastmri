@@ -15,6 +15,7 @@ interface MainDashboardProps {
     onAssignPatientToStation?: (patientId: string, stationId: number) => void;
 	onFreeStation?: (patientId: string) => void;
 	onMarkCompleted?: (patientId: string) => void;
+	onUpdatePatientName?: (patientId: string, newName: string) => void;
 }
 
 const MainDashboard: React.FC<MainDashboardProps> = ({
@@ -26,7 +27,8 @@ const MainDashboard: React.FC<MainDashboardProps> = ({
 	onViewDepartment,
 	onAssignPatientToStation,
 	onFreeStation,
-	onMarkCompleted
+	onMarkCompleted,
+	onUpdatePatientName
 }) => {
 	const [assignPatientId, setAssignPatientId] = useState<string | null>(null);
 
@@ -49,6 +51,7 @@ const MainDashboard: React.FC<MainDashboardProps> = ({
 					patients={waitingPatients}
 					onUpdatePatient={onUpdatePatient}
 					onAssignStation={(pid) => setAssignPatientId(pid)}
+					onUpdatePatientName={onUpdatePatientName}
 				/>
 			</div>
 
@@ -60,6 +63,7 @@ const MainDashboard: React.FC<MainDashboardProps> = ({
 				onUpdatePatient={onUpdatePatient}
 				onFreeStation={onFreeStation}
 				onMarkCompleted={onMarkCompleted}
+				onUpdatePatientName={onUpdatePatientName}
 			/>
 
 			{/* Assign Station Modal */}
